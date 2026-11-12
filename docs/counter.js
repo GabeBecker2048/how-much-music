@@ -1,5 +1,5 @@
 /*
- * n-measures core: count the ways one measure can be written / can sound.
+ * how-much-music core: count the ways one measure can be written / can sound.
  *
  * Lengths are on a grid of 96 units per whole note, the smallest grid on which
  * every allowed value is whole: 16th = 6, dotted 16th = 9, triplet eighth = 8,

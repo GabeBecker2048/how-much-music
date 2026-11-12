@@ -128,7 +128,7 @@
 
   <h2>Computation and exactness</h2>
   <p>The counts far exceed the range of floating-point arithmetic: IEEE double precision represents integers exactly only up to \(2^{53}\approx 9\times10^{15}\) and overflows near \(1.8\times10^{308}\). Both implementations therefore use exact arbitrary-precision integers: <code>BigInt</code> in the JavaScript that runs the calculator and this page, and Python's built-in <code>int</code> in the reference program. Every addition and multiplication in Theorems 3 and 6 and in the \(r_n\) table is exact and cannot overflow. Scientific notation and percentages are produced from the decimal digit string with integer rounding, so no step converts a large count to a float. Table 1 and Table 2 on this page are computed in your browser by the same code as the calculator.</p>
-  <p>Theorem 3 is evaluated bottom-up, \(t=0,1,\dots,L\). The Python version is written as a memoized recursion but warms its cache in increasing order of \(t\), so it never recurses more than one level. Source code is available at <a href="https://github.com/GabeBecker2048/n-measures">github.com/GabeBecker2048/n-measures</a>.</p>
+  <p>Theorem 3 is evaluated bottom-up, \(t=0,1,\dots,L\). The Python version is written as a memoized recursion but warms its cache in increasing order of \(t\), so it never recurses more than one level. Source code is available at <a href="https://github.com/GabeBecker2048/how-much-music">github.com/GabeBecker2048/how-much-music</a>.</p>
 
   <h2>Limitations and extensions</h2>
   <p><b>Polyphony.</b> We count melodies, one note at a time. If any set of keys may sound together, each slot has \(2^{88}\) choices (the empty set being the rest), and the 4/4 count rises to roughly \(10^{424}\). Theorem 3 applies unchanged with \(p=2^{88}\).</p>
@@ -144,7 +144,7 @@
   <p><b>Notation conventions.</b> We do not impose engraving rules (beaming, how syncopations are conventionally written, clef or key signature), nor do we model dynamics, articulation or tempo. Each of these would multiply the counts further or restrict them in convention-dependent ways.</p>
 
   <footer class="page">
-    <a href="addendum.html">Addendum: triplets</a> · <a href="calculator.html">Calculator</a> · <a href="story.html">How this problem came about</a> · <a href="https://github.com/GabeBecker2048/n-measures">Source</a>
+    <a href="addendum.html">Addendum: triplets</a> · <a href="calculator.html">Calculator</a> · <a href="story.html">How this problem came about</a> · <a href="https://github.com/GabeBecker2048/how-much-music">Source</a>
   </footer>
 </main>
 

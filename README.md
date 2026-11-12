@@ -1,4 +1,4 @@
-# n-measures
+# how-much-music
 
 How many possible measures of music are there? This project counts them exactly.
 
@@ -9,12 +9,12 @@ For one measure of 4/4 on the 88 keys of a piano, with note values from 16th not
 
 Adding eighth-, quarter- and half-note triplets (the addendum) raises these to about 2.21 × 10³⁵ and 4.51 × 10³¹.
 
-**Website:** https://gabebecker2048.github.io/n-measures/
+**Website:** https://gabebecker2048.github.io/how-much-music/
 
-- [Paper](https://gabebecker2048.github.io/n-measures/): the derivation, written like a math paper
-- [Addendum](https://gabebecker2048.github.io/n-measures/addendum.html): the same count with triplets
-- [Calculator](https://gabebecker2048.github.io/n-measures/calculator.html): any pitch range, time signature, set of note values and triplets
-- [Story](https://gabebecker2048.github.io/n-measures/story.html): how the problem came about and how it was solved
+- [Paper](https://gabebecker2048.github.io/how-much-music/): the derivation, written like a math paper
+- [Addendum](https://gabebecker2048.github.io/how-much-music/addendum.html): the same count with triplets
+- [Calculator](https://gabebecker2048.github.io/how-much-music/calculator.html): any pitch range, time signature, set of note values and triplets
+- [Story](https://gabebecker2048.github.io/how-much-music/story.html): how the problem came about and how it was solved
 
 ## The idea in one line
 
