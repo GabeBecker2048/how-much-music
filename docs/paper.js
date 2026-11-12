@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT  (Copyright (c) 2026 Gabriel Becker; see LICENSE)
 /* Fills the result tables of the paper (index.html) and the addendum
  * (addendum.html) from counter.js, so the papers and the calculator always
  * show the same numbers. The static rows in the HTML are the fallback when

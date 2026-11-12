@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT  (Copyright (c) 2026 Gabriel Becker; see LICENSE)
 /*
  * how-much-music core: count the ways one measure can be written / can sound.
  *

@@ -73,3 +73,15 @@ Then open http://localhost:8000.
 ## Publishing
 
 In the GitHub repository: **Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/docs`**.
+
+## License
+
+The **code** is released under the [MIT License](LICENSE):
+
+- `python/` (the Python program and its tests)
+- `docs/counter.js`, `docs/paper.js` and `docs/style.css`
+- the script inside `docs/calculator.html`
+
+Each of these files is marked `SPDX-License-Identifier: MIT`.
+
+The **paper, addendum and story** (the text and mathematics of `docs/index.html`, `docs/addendum.html` and `docs/story.html`, the text of `docs/calculator.html`, and the figures in `docs/img/`) are © 2026 Gabriel Becker and licensed under [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). You may share and adapt them for any purpose, as long as you give appropriate credit, link to the license, and indicate if changes were made.

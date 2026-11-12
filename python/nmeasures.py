@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT  (Copyright (c) 2026 Gabriel Becker; see LICENSE)
 """Count the ways a single measure of music can be written or can sound.
 
 Durations are measured on a grid of 96 units per whole note, the smallest grid

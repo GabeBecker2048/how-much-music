@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT  (Copyright (c) 2026 Gabriel Becker; see LICENSE)
 """Tests for nmeasures.py. Written by Claude Opus. Run:  python3 -m unittest discover python -v"""
 import unittest
 
