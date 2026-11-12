@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Addendum: Triplets</title>
+<meta name="description" content="Extending the count of possible measures of music to eighth-, quarter- and half-note triplets, with an automaton for counting distinct sounds.">
+<meta name="author" content="Gabriel Becker">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body)"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="site">
+  <a href="index.html">Paper</a><span class="sep">·</span><span aria-current="page">Addendum</span><span class="sep">·</span><a href="calculator.html">Calculator</a><span class="sep">·</span><a href="story.html">Story</a>
+  <a href="#" class="print-link" onclick="window.print();return false">Print / save as PDF</a>
+</nav>
+
+<main class="numbered" data-model="triplets">
+  <header class="title">
+    <h1>Addendum: Triplets</h1>
+    <p class="author">Gabriel Becker</p>
+    <p class="date">November 2026 · a supplement to <a href="index.html"><i>On the Number of Possible Measures of Music</i></a></p>
+  </header>
+
+  <section class="abstract">
+    <h2>Abstract</h2>
+    <p>The main paper counts measures built from ordinary and dotted note values. Here we extend those confines to eighth-, quarter- and half-note triplets. Treating each complete triplet group as one <em>block</em>, the recurrence of the main paper gains a single extra term. Counting distinct sounds needs more care, because rests inside a triplet group merge with rests outside it; we count them exactly with a finite automaton. For one measure of 4/4 on the 88 keys of a piano, the headline counts change to about \(2.21\times10^{35}\) written and \(4.51\times10^{31}\) sounding measures. That is about 7% and 10% more than without triplets.</p>
+  </section>
+
+  <section class="authorship">
+    <p><b>Note on authorship.</b> As with the main paper, the solution is Gabriel Becker's. Claude Opus 5.5 (Anthropic) wrote it up in this form and built the calculator.</p>
+  </section>
+
+  <h2>Introduction</h2>
+  <p>Triplets are among the most common rhythms in music, but they lie outside the main paper's model, in which every note value is an ordinary or dotted value from the sixteenth to the whole note. We add the three common kinds of triplet: eighth-, quarter- and half-note triplets. Sixteenth-note triplets stay excluded by the main paper's rule that nothing is shorter than a sixteenth.</p>
+  <p>The written count needs only a finer grid and one new term in the recurrence (Sections 2 to 4). The sounding count needs a new method (Section 5). Results are in Section 6. References such as "Theorem 3" refer to the <a href="index.html">main paper</a>.</p>
+
+  <h2>A finer grid</h2>
+  <p>A triplet eighth lasts \(1/12\) of a whole note, which is not a whole number of 32nds. The smallest grid on which every allowed value is whole has \(96\) units per whole note, three times finer than before. On it the ordinary note values become</p>
+  \[ D = \{6, 9, 12, 18, 24, 36, 48, 72, 96\}, \]
+  <p>and a measure of \(a/b\) time has length \(L = 96\cdot a/b\); for 4/4, \(L=96\). Every count in the main paper is unchanged by this rescaling.</p>
+  <p>A triplet group fits three notes of value \(v\) into the time of two ordinary notes of the same value. Its interior is one of the three rhythms \((v,v,v)\), \((v,2v)\) or \((2v,v)\): three triplet notes, or a triplet note and one twice as long, in either order.</p>
+  <div class="table-wrap">
+  <table>
+    <caption><b>Table A1.</b> The triplet groups allowed.</caption>
+    <thead><tr><th>Triplet group</th><th>Triplet value \(v\)</th><th>Group spans</th><th>Span \(3v\)</th></tr></thead>
+    <tbody>
+      <tr><td>eighth-note triplet</td><td>8</td><td>a quarter note</td><td>24</td></tr>
+      <tr><td>quarter-note triplet</td><td>16</td><td>a half note</td><td>48</td></tr>
+      <tr><td>half-note triplet</td><td>32</td><td>a whole note</td><td>96</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Triplet groups as blocks</h2>
+  <p>A triplet note cannot stand alone; it belongs to a complete group. So instead of single notes, a measure is built from <em>blocks</em>.</p>
+  <div class="defn"><span class="head">Definition A1.</span> A <em>block</em> is a finite sequence of slot lengths: either a single ordinary note \((d)\) with \(d\in D\), or a triplet group \((v,v,v)\), \((v,2v)\) or \((2v,v)\) with \(v\in V=\{8,16,32\}\). Let \(\mathcal B\) be the set of blocks (here \(|\mathcal B| = 9 + 3\cdot 3 = 18\)). For a block \(b\), write \(|b|\) for its total length and \(\nu(b)\) for its number of slots. A <em>written measure</em> of length \(L\) is a sequence of blocks \(b_1,\dots,b_m\) with \(|b_1|+\dots+|b_m| = L\), together with one of \(p\) symbols (a pitch or the rest) for every slot. Its number of notes is \(n=\sum_i \nu(b_i)\).</div>
+  <p>Without triplets every block is a single note, and this is exactly Definition 1 of the main paper. We place no engraving rules on where a triplet group may begin. Lemma 1 holds unchanged: a rhythm with \(n\) notes is the rhythm of \(p^n\) written measures. Proposition 2 also carries over, with blocks in place of notes. With \(m_b\) blocks of each kind, \(m=\sum_b m_b\) and \(n=\sum_b m_b\,\nu(b)\),
+  \[ f(L) \;=\; \sum_{\substack{(m_b)_{b\in\mathcal B}\\ \sum_b m_b\, |b| \,=\, L}} \; p^{\,n}\,\frac{m!}{\prod_{b\in\mathcal B} m_b!}. \]
+  It now has eighteen variables, which makes the recurrence even more valuable.</p>
+
+  <h2>The recurrence</h2>
+  <div class="thm"><span class="head">Theorem A2.</span> \(f(0)=1\), and for \(t\ge 1\),
+  \[ f(t) \;=\; \sum_{\substack{b\in\mathcal B\\ |b|\le t}} p^{\,\nu(b)}\, f(t-|b|) \;=\; p\sum_{\substack{d\in D\\ d\le t}} f(t-d) \;+\; \big(p^3+2p^2\big)\sum_{\substack{v\in V\\ 3v\le t}} f(t-3v). \]
+  </div>
+  <div class="proof"><span class="head">Proof.</span> As for Theorem 3, classify a non-empty measure by its first block \(b_1\). The block can be filled in \(p^{\nu(b_1)}\) ways, and what remains is any written measure of length \(t-|b_1|\). Summing over \(b_1\) gives the first form. The second groups the blocks: each ordinary note contributes \(p\), and the three rhythms of a triplet group with value \(v\) contribute \(p^3+p^2+p^2\).</div>
+  <p>So triplets add one term: a triplet group is simply a second kind of "coin" of length \(3v\) and weight \(p^3+2p^2\). Computing \(f(0),\dots,f(L)\) takes \(L\,|\mathcal B|\) multiply-adds, fewer than 2,000 for 4/4.</p>
+  <div class="thm"><span class="head">Corollary A3.</span> With \(D(x)=\sum_{d\in D}x^d\) and \(T(x)=\sum_{v\in V}x^{3v}\),
+  \[ \sum_{t\ge0} f(t)\,x^t \;=\; \frac{1}{1-p\,D(x)-\big(p^3+2p^2\big)\,T(x)}. \]
+  Marking notes with \(y\) gives \(1/\big(1-y\,D(x)-(y^3+2y^2)\,T(x)\big)\), whose coefficients \(r_n=[x^Ly^n]\) count rhythms with \(n\) notes (Table A3).</div>
+
+  <h2>Counting sounds</h2>
+  <p>Theorem 6 of the main paper counts sounds by merging adjacent rests. That argument relied on every note being a separate block. With triplets it breaks down, because a rest inside a triplet group merges with rests outside it, and different blocks can produce the same sound. For example, the eighth-note triplet rhythm \((8,16)\) filled with a note and then a rest sounds exactly like \((8,8,8)\) filled with a note and two rests. We therefore describe each sound by a string.</p>
+
+  <div class="defn"><span class="head">Definition A4.</span> The <em>onset string</em> of a written measure of length \(L\) is the word \(\sigma\in\{\mathtt S,\mathtt C,\mathtt R\}^L\) with one letter per unit: \(\mathtt S\) where a note starts, \(\mathtt C\) where a note continues, and \(\mathtt R\) where there is silence. A note slot of length \(d\) contributes \(\mathtt S\,\mathtt C^{d-1}\), and a rest slot contributes \(\mathtt R^d\).</div>
+
+  <p>Two written measures sound the same exactly when they have the same onset string and the same pitch on each \(\mathtt S\). The onset string records when every note starts and stops, and merging rests does not change it. So with \(k\) distinct pitches, the number of sounds is \(\sum_\sigma k^{\#\mathtt S(\sigma)}\), summed over the onset strings that some written measure produces.</p>
+
+  <div class="thm"><span class="head">Theorem A5.</span> For each block \(b\), let \(F_b\) be the set of \(2^{\nu(b)}\) strings obtained by making each slot a note or a rest. The onset strings of written measures of length \(L\) are exactly the words of length \(L\) in the regular language \(\Sigma=\big(\bigcup_{b\in\mathcal B} F_b\big)^{*}\). Let \(Q\) be the states of a deterministic automaton for \(\Sigma\), with start state \(q_0\) and transition function \(\delta\), and define
+  \[ g(0,q) = [\,q \text{ accepting}\,], \qquad g(t,q) = \sum_{c\in\{\mathtt S,\mathtt C,\mathtt R\}} w(c)\; g\big(t-1,\delta(q,c)\big), \]
+  with \(w(\mathtt S)=k\), \(w(\mathtt C)=w(\mathtt R)=1\), and terms with an undefined \(\delta\) omitted. The number of distinct sounding measures of length \(L\) is \(g(L,q_0)\).</div>
+  <div class="proof"><span class="head">Proof.</span> A written measure is a sequence of filled blocks, and its onset string is the concatenation of their strings, so the set of onset strings is \(\Sigma\) restricted to length \(L\). Because the automaton is deterministic, each word of \(\Sigma\) follows exactly one path from \(q_0\) and is counted once, however many written measures produce it. Each \(\mathtt S\) on the path contributes a factor of \(k\) for its pitch, so \(g(L,q_0)=\sum_\sigma k^{\#\mathtt S(\sigma)}\).</div>
+  <p>The automaton is built from the nondeterministic one that reads one filled block at a time, by the standard subset construction. For our 18 blocks there are 66 block fillings, and 883 subsets are reachable, so \(g\) takes at most a few hundred thousand exact operations for 4/4. Without triplets, Theorem A5 gives the same counts as Theorem 6 of the main paper; we checked this for every \(L\le 96\). Both theorems were also checked against brute-force enumeration of every written measure for short lengths, including measures that contain each kind of triplet group.</p>
+
+  <h2>Results</h2>
+  <p>Table A2 compares one measure of 4/4 over the full piano range with and without triplets. Every figure is exact; the scientific values are rounded to four significant digits.</p>
+
+  <div class="table-wrap">
+  <table id="t-main">
+    <caption><b>Table A2.</b> Measures of 4/4, piano range A0–C8, all nine note values.</caption>
+    <thead><tr><th>What is counted</th><th>Without triplets</th><th>With triplets</th></tr></thead>
+    <tbody>
+      <tr><td><b>Written</b> (♯/♭ spellings + rest, \(p=155\))</td><td>≈ 2.075 × 10<sup>35</sup></td><td><b>≈ 2.211 × 10<sup>35</sup></b></td></tr>
+      <tr><td><b>Sounding</b> (88 keys, rests merged)</td><td>≈ 4.094 × 10<sup>31</sup></td><td><b>≈ 4.510 × 10<sup>31</sup></b></td></tr>
+      <tr><td>Rhythms only</td><td>272,163</td><td>579,888</td></tr>
+      <tr><td>Written, also 𝄪/𝄫 spellings (\(p=258\))</td><td>≈ 5.777 × 10<sup>38</sup></td><td>≈ 6.023 × 10<sup>38</sup></td></tr>
+      <tr><td>One symbol per key + rest (\(p=89\))</td><td>≈ 4.100 × 10<sup>31</sup></td><td>≈ 4.518 × 10<sup>31</sup></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>With triplets, the written count is exactly <span class="exact" id="exact-written">221,093,563,947,910,687,084,921,771,175,534,030</span> and the sounding count is <span class="exact" id="exact-sounding">45,104,953,235,466,120,350,740,861,079,001</span>.</p>
+  <p>Triplets more than double the number of rhythms, but they change the totals far less. Measures that use at least one triplet group make up about 6% of written measures and about 9% of sounds. The reason is the same one that dominates the main paper: the count is driven by the busiest rhythms, and triplets cannot produce busier ones. An eighth-note triplet fits three notes into the time of four sixteenths, so the maximum is still sixteen notes. Table A3 shows that measures of 15 and 16 notes still make up about 93% of the written count, and the single rhythm of sixteen sixteenth notes about half.</p>
+
+  <div class="table-wrap">
+  <table id="t-breakdown">
+    <caption><b>Table A3.</b> 4/4 measures with triplets, by number of notes \(n\); \(r_n\) rhythms, \(r_n\,155^n\) written measures.</caption>
+    <thead><tr><th>\(n\)</th><th>\(r_n\)</th><th>\(r_n\,155^n\)</th><th>Share</th></tr></thead>
+    <tbody><tr><td colspan="4" class="wrap">Enable JavaScript to show this table, or run <code>python3 python/nmeasures.py --triplets --breakdown</code>.</td></tr></tbody>
+  </table>
+  </div>
+
+  <h3>Scale</h3>
+  <p>The comparisons in the main paper change only slightly. Three measures give about \(1.1\times10^{106}\) written and \(9.2\times10^{94}\) sounding phrases, both still far beyond the roughly \(10^{80}\) atoms in the observable universe. Listening to every distinct-sounding measure at 120 beats per minute would take about \(2.9\times10^{24}\) years, about 210 trillion times the age of the universe. Playing every written measure would take about \(1.4\times10^{28}\) years, about a billion billion times the age of the universe.</p>
+
+  <h2>Further extensions</h2>
+  <p><b>Ties.</b> The tie extension of the main paper carries over. For written measures, each block acts as a \(2\times2\) transfer matrix between the states "ends on a pitched note" and "ends on a rest", built slot by slot with the same rule. For sounds, a note slot that directly follows a note slot may also contribute \(\mathtt C^{d}\) instead of \(\mathtt S\,\mathtt C^{d-1}\), and the automaton is built in the same way. With triplets and ties, the 4/4 counts are about \(2.425\times10^{35}\) written and \(4.568\times10^{31}\) sounding. The reference program computes both with <code>--triplets --ties</code>.</p>
+  <p><b>Other tuplets.</b> Including sixteenth-note triplets as a fourth group would raise the written count to about \(5.1\times10^{52}\), because they fit 24 notes into a measure instead of 16. This is why the shortest-value rule matters. Any other tuplet (quintuplets, sextuplets, duplets in compound time) is one more kind of block. It needs a grid on which its notes are whole numbers of units (a multiple of 5 for quintuplets, for instance), and its interior rhythms are counted by the same recurrence on the tuplet's own grid. Theorems A2 and A5 then apply unchanged. Nested tuplets can be handled the same way, one level at a time.</p>
+
+  <footer class="page">
+    <a href="index.html">Main paper</a> · <a href="calculator.html">Calculator</a> · <a href="story.html">Story</a> · <a href="https://github.com/GabeBecker2048/n-measures">Source</a>
+  </footer>
+</main>
+
+<script src="counter.js"></script>
+<script src="paper.js"></script>
+</body>
+</html>

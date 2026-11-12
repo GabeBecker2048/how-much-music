@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On the Number of Possible Measures of Music</title>
+<meta name="description" content="An exact count of the ways a single measure of music can be written or can sound, with a recurrence that replaces enumerating every rhythm.">
+<meta name="author" content="Gabriel Becker">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body)"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="site">
+  <span aria-current="page">Paper</span><span class="sep">·</span><a href="addendum.html">Addendum</a><span class="sep">·</span><a href="calculator.html">Calculator</a><span class="sep">·</span><a href="story.html">Story</a>
+  <a href="#" class="print-link" onclick="window.print();return false">Print / save as PDF</a>
+</nav>
+
+<main class="numbered" data-model="base">
+  <header class="title">
+    <h1>On the Number of Possible Measures of Music</h1>
+    <p class="author">Gabriel Becker</p>
+    <p class="date">November 2026</p>
+  </header>
+
+  <section class="abstract">
+    <h2>Abstract</h2>
+    <p>We count the single measures of monophonic music that can be formed from a fixed pitch range and a fixed set of note values. A measure with a given rhythm of \(n\) notes can be filled in \(p^n\) ways, and summing this over every rhythm reduces to a linear recurrence on a 32nd-note grid. The recurrence removes any need to enumerate rhythms and gives exact counts in \(O(L\,|D|)\) arithmetic operations. For one measure of 4/4 on the 88 keys of a piano, with note values from the sixteenth to the whole note including dotted values, we give two headline answers. A measure can be <em>written</em> in about \(2.08\times10^{35}\) ways, counting every spelling with sharps and flats and every rest. It can <em>sound</em> in about \(4.09\times10^{31}\) distinct ways, where enharmonic notes are identified and adjacent rests merge. An <a href="addendum.html">addendum</a> extends the count to triplets.</p>
+  </section>
+
+  <section class="authorship">
+    <p><b>Note on authorship.</b> The solution presented here is Gabriel Becker's. It was first written by hand as a combination of a mathematical proof and a computer-science proof with pseudocode. Claude Opus 5.5 (Anthropic) translated that work into this formal paper and built the accompanying calculator. The solution itself is not Claude's.</p>
+  </section>
+
+  <h2>Introduction</h2>
+  <p>How much music is there? If pieces may be arbitrarily long, the answer is trivially infinite: appending one more measure to any piece produces a new one. The question becomes interesting only when it is bounded. The natural unit is the <em>measure</em>. Music is written measure by measure, and a piece of \(k\) measures is a sequence of \(k\) independent choices, so counting measures counts everything else too.</p>
+  <p>We fix three constraints: pitches come from a given range (by default, the 88 keys of a piano); note values range from the sixteenth note to the whole note, including dotted values; and dynamics, tempo, articulation and style are ignored. Under these constraints the number of measures is finite, and we compute it exactly.</p>
+  <p>Sections 2 to 4 set up the model and derive the direct (but impractical) formula as a sum over rhythms. Section 5 replaces that sum with a recurrence. Section 6 separates measures that are <em>written</em> differently from measures that <em>sound</em> different. Sections 7 and 8 give numbers. The <a href="addendum.html">addendum</a> adds triplets to the model. An interactive version is on the <a href="calculator.html">calculator</a> page, and the <a href="story.html">story</a> page tells how the problem was found and solved.</p>
+
+  <h2>Model and definitions</h2>
+  <p>A dotted sixteenth note lasts \(3/32\) of a whole note, so all durations are measured in integer multiples of a 32nd note, called <em>units</em>. The allowed note values are then the set</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Note value</th><th>whole</th><th>dot. half</th><th>half</th><th>dot. qtr</th><th>quarter</th><th>dot. 8th</th><th>8th</th><th>dot. 16th</th><th>16th</th></tr></thead>
+    <tbody><tr><td>Units \(d\)</td><td>32</td><td>24</td><td>16</td><td>12</td><td>8</td><td>6</td><td>4</td><td>3</td><td>2</td></tr></tbody>
+  </table>
+  </div>
+  \[ D = \{2, 3, 4, 6, 8, 12, 16, 24, 32\}. \]
+  <p>A measure in time signature \(a/b\) has length \(L = 32\cdot a/b\) units; for 4/4, \(L = 32\).</p>
+
+  <div class="defn"><span class="head">Definition 1.</span> Let \(S\) be a finite set of \(p = |S|\) <em>symbols</em>, each either a pitch or the rest. A <em>written measure</em> of length \(L\) is a finite sequence \(\big((d_1,s_1),\dots,(d_n,s_n)\big)\) with \(d_i\in D\), \(s_i\in S\) and \(d_1+\dots+d_n = L\). Its <em>rhythm</em> is the sequence \((d_1,\dots,d_n)\), and \(n\) is its number of notes.</div>
+
+  <p>We write \(f(L)\) for the number of written measures of length \(L\), with \(p\) and \(D\) understood. Which symbols \(S\) contains decides what is being counted; see Section 7.</p>
+
+  <h2>Counting a fixed rhythm</h2>
+  <div class="thm"><span class="head">Lemma 1.</span> A rhythm with \(n\) notes is the rhythm of exactly \(p^n\) written measures.</div>
+  <div class="proof"><span class="head">Proof.</span> The rhythm fixes \(d_1,\dots,d_n\); each \(s_i\) is chosen independently from \(p\) symbols.</div>
+  <p>Consequently every rhythm with the same number of notes contributes equally, whatever the note values are. A dotted quarter, an eighth and a half note give \(p^3\) measures, as do the same three values in any other order.</p>
+
+  <h2>Summing over rhythms</h2>
+  <p>A rhythm is determined by how many notes of each value it contains, \((n_d)_{d\in D}\), together with an ordering of those notes. The number of distinct orderings of a multiset with \(n=\sum_d n_d\) elements is the multinomial coefficient, which gives:</p>
+  <div class="thm"><span class="head">Proposition 2.</span>
+  \[ f(L) \;=\; \sum_{\substack{(n_d)_{d\in D}\\ \sum_d n_d\, d \,=\, L}} \; p^{\,n}\,\frac{n!}{\prod_{d\in D} n_d!}, \qquad n=\sum_{d\in D} n_d. \]
+  </div>
+  <div class="proof"><span class="head">Proof.</span> Group rhythms by their multiset of note values. Each multiset yields \(n!/\prod_d n_d!\) rhythms, and each rhythm yields \(p^n\) measures by Lemma 1.</div>
+  <p>Proposition 2 is correct, but using it requires listing every solution of \(\sum_d n_d\,d = L\) in non-negative integers, nine variables in our case. That is impractical by hand and awkward even by machine. The next section avoids the enumeration entirely.</p>
+
+  <h2>The recurrence</h2>
+  <div class="thm"><span class="head">Theorem 3.</span> \(f(0)=1\), and for \(t\ge 1\),
+  \[ f(t) \;=\; p\sum_{\substack{d\in D\\ d\le t}} f(t-d). \]
+  </div>
+  <div class="proof"><span class="head">Proof.</span> The empty sequence is the only measure of length 0. For \(t\ge1\) a written measure is non-empty; classify it by its first note \((d_1,s_1)\). Removing that note leaves a written measure of length \(t-d_1\), and conversely prefixing any measure of length \(t-d_1\) with \((d_1,s_1)\) gives a measure of length \(t\). This bijection gives \(p\cdot f(t-d_1)\) measures for each \(d_1\le t\). Summing over \(d_1\) completes the proof.</div>
+  <p>Computing \(f(0),f(1),\dots,f(L)\) in order takes \(L\,|D|\) additions and \(L\) multiplications; for 4/4 that is about 300 operations. The recurrence is the familiar "ways to make change" recursion, where order matters and each coin is weighted by \(p\).</p>
+
+  <div class="thm"><span class="head">Corollary 4.</span> With \(D(x)=\sum_{d\in D}x^d\),
+  \[ \sum_{t\ge0} f(t)\,x^t \;=\; \frac{1}{1-p\,D(x)}, \qquad f(L) = [x^L]\,\frac{1}{1-p\,D(x)}. \]
+  </div>
+  <div class="proof"><span class="head">Proof.</span> Theorem 3 says \(F(x) = 1 + p\,D(x)\,F(x)\) for \(F(x)=\sum_t f(t)x^t\).</div>
+
+  <div class="remark"><span class="head">Remark 5.</span> Marking notes with a second variable \(y\) gives \(1/(1-y\,D(x))\), whose coefficient \(r_n = [x^L y^n]\) is the number of rhythms with exactly \(n\) notes. Comparing with Proposition 2, \(r_n\) equals the sum of \(n!/\prod_d n_d!\) over all breakdowns with \(n\) notes, and \(f(L)=\sum_n r_n\,p^n\). They satisfy \(r_0(0)=1\) and \(r_n(t)=\sum_{d\le t} r_{n-1}(t-d)\), and are tabulated in Table 2.</div>
+
+  <h2>Written versus sounding measures</h2>
+  <p>Definition 1 distinguishes a half rest from two quarter rests, although the two sound identical. To count sounds rather than notations, we merge adjacent rests. Repeated notes are <em>not</em> merged: two quarter notes on the same pitch are re-articulated and sound different from one half note.</p>
+  <p>Let \(k\) be the number of distinct pitches, and let \(G\) be the set of positive lengths expressible as a sum of elements of \(D\); these are the possible lengths of a merged silence. For our \(D\), \(G=\{2,3,4,\dots\}\).</p>
+  <div class="thm"><span class="head">Theorem 6.</span> Let \(A(0)=1\), \(B(0)=0\), and for \(t\ge1\)
+  \[ A(t) = k\sum_{\substack{d\in D\\ d\le t}} \big(A(t-d)+B(t-d)\big), \qquad B(t) = \sum_{\substack{g\in G\\ g\le t}} A(t-g). \]
+  The number of distinct sounding measures of length \(L\) is \(A(L)+B(L)\).</div>
+  <div class="proof"><span class="head">Proof sketch.</span> Replacing every maximal run of rests by one silence of the combined length maps each written measure to a sequence of notes \((d,\text{pitch})\) and silences \(g\in G\) in which no two silences are adjacent. Every such sequence arises, and two written measures sound alike exactly when they map to the same sequence. \(A(t)\) counts these sequences of length \(t\) that are empty or end on a note, and \(B(t)\) counts those that end on a silence. Classifying by the last element gives the recurrences: a note may follow anything, and a silence may follow only an empty sequence or a note.</div>
+
+  <h2>Counting pitch symbols</h2>
+  <p>For sounding measures, \(k\) is the number of keys in range: \(88\) for a piano (A0 to C8). One may also take one symbol per key plus a rest, \(p = 89\). This mixes the two models: rests are counted as written (a half rest differs from two quarter rests) but pitches as sounded (C\(\sharp\) equals D\(\flat\)). We report it for completeness, but neither headline uses it.</p>
+  <p>To count written measures with enharmonic spellings distinguished (C\(\sharp\) and D\(\flat\) are different notations), \(p\) is the number of spellings whose pitch lies in range, plus one. The piano has 52 white-key letter positions. With single sharps and flats, each gives three spellings; excluding A\(\flat\)0 and C\(\sharp\)8, which fall outside the range, there are \(52\cdot 3-2=154\) spellings and \(p=155\). Allowing double sharps and flats as well, direct enumeration gives \(257\) spellings and \(p=258\). Edge cases such as G𝄪0 (= A0) and D𝄫8 (= C8) are included.</p>
+
+  <h2>Results</h2>
+  <p>Table 1 gives the counts for one measure of 4/4 over the full piano range with all nine note values. The two headline counts are in bold. Every figure is exact; the scientific values are rounded to four significant digits.</p>
+
+  <div class="table-wrap">
+  <table id="t-main">
+    <caption><b>Table 1.</b> Measures of 4/4, piano range A0–C8, \(D=\{2,3,4,6,8,12,16,24,32\}\).</caption>
+    <thead><tr><th>What is counted</th><th>\(p\) or \(k\)</th><th>Count</th></tr></thead>
+    <tbody>
+      <tr><td><b>Written</b> (♯/♭ spellings + rest)</td><td>155</td><td><b>≈ 2.075 × 10<sup>35</sup></b></td></tr>
+      <tr><td><b>Sounding</b> (88 keys, rests merged)</td><td>88</td><td><b>≈ 4.094 × 10<sup>31</sup></b></td></tr>
+      <tr><td>Rhythms only</td><td>1</td><td>272,163</td></tr>
+      <tr><td>Written, also 𝄪/𝄫 spellings</td><td>258</td><td>≈ 5.777 × 10<sup>38</sup></td></tr>
+      <tr><td>One symbol per key + rest (mixed)</td><td>89</td><td>≈ 4.100 × 10<sup>31</sup></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p id="exact">Exactly, the written count is <span class="exact" id="exact-written">207,500,798,751,709,995,948,691,861,325,549,855</span> and the sounding count is <span class="exact" id="exact-sounding">40,935,886,428,964,117,905,911,001,094,097</span>.</p>
+
+  <p>Table 2 breaks the written count (\(p=155\)) down by the number of notes in the measure. Although rhythms with 9 to 12 notes are by far the most numerous, the factor \(p^n\) overwhelms them: measures of 15 and 16 notes make up about 95% of the total. The single rhythm of sixteen sixteenth notes accounts for more than half of all written measures by itself.</p>
+
+  <div class="table-wrap">
+  <table id="t-breakdown">
+    <caption><b>Table 2.</b> 4/4 measures by number of notes \(n\); \(r_n\) rhythms, \(r_n\,155^n\) written measures.</caption>
+    <thead><tr><th>\(n\)</th><th>\(r_n\)</th><th>\(r_n\,155^n\)</th><th>Share</th></tr></thead>
+    <tbody><tr><td colspan="4" class="wrap">Enable JavaScript to show this table, or run <code>python3 python/nmeasures.py --breakdown</code>.</td></tr></tbody>
+  </table>
+  </div>
+
+  <h3>Scale</h3>
+  <p>The written count is about \(10^{35.3}\) and the sounding count about \(10^{31.6}\). The observable universe is commonly estimated to contain about \(10^{80}\) atoms. Since measures combine independently, a three-measure phrase already exceeds that estimate under either model: about \(8.9\times10^{105}\) written and \(6.9\times10^{94}\) sounding possibilities.</p>
+  <p>Time gives another sense of scale. At 120 beats per minute, one measure of 4/4 lasts two seconds. Listening to every distinct-sounding measure back to back, with no pauses, would take about \(2.6\times10^{24}\) years. The universe is about \(1.38\times10^{10}\) years old, so the listening session would last roughly \(1.9\times10^{14}\) times the age of the universe, or about 190 trillion lifetimes of the cosmos so far. Playing every <em>written</em> measure would take about \(1.3\times10^{28}\) years, nearly a billion billion (\(9.5\times10^{17}\)) times the age of the universe. A listener who started at the Big Bang would by now have heard only about one in every \(2\times10^{14}\) of the possible single measures.</p>
+  <p>It is worth saying plainly what the count contains. Within the confines of Section 1, every 4/4 measure of every melody line ever written is one of the \(2.075\times10^{35}\) written measures. That includes every measure of Bach, Mozart and Beethoven, every measure of a song released last week, and every measure anyone could improvise right now, however good or bad. Longer pieces are sequences of such measures. The count is therefore not an estimate of how much music there is: within these confines it is exactly the amount of music that can exist, one measure at a time. What lies outside is only what the model excludes: chords, ties, tuplets and values shorter than a sixteenth (see Section 10, and the <a href="addendum.html">addendum</a> for triplets).</p>
+  <p>None of these exclusions is out of reach. Other time signatures, a wider pitch range, ties, quintuplets or chords each change only the inputs to Theorems 3 and 6 (the length \(L\), the symbol count \(p\) or the set \(D\)), add one more kind of block, as the addendum does for triplets, or add one extra state, as ties do in Section 10. The <a href="calculator.html">calculator</a> already accepts other time signatures, pitch ranges and sets of note values, with or without triplets. Whatever qualification one wants to attach to the count, the same method computes the corresponding number exactly.</p>
+
+  <h2>Computation and exactness</h2>
+  <p>The counts far exceed the range of floating-point arithmetic: IEEE double precision represents integers exactly only up to \(2^{53}\approx 9\times10^{15}\) and overflows near \(1.8\times10^{308}\). Both implementations therefore use exact arbitrary-precision integers: <code>BigInt</code> in the JavaScript that runs the calculator and this page, and Python's built-in <code>int</code> in the reference program. Every addition and multiplication in Theorems 3 and 6 and in the \(r_n\) table is exact and cannot overflow. Scientific notation and percentages are produced from the decimal digit string with integer rounding, so no step converts a large count to a float. Table 1 and Table 2 on this page are computed in your browser by the same code as the calculator.</p>
+  <p>Theorem 3 is evaluated bottom-up, \(t=0,1,\dots,L\). The Python version is written as a memoized recursion but warms its cache in increasing order of \(t\), so it never recurses more than one level. Source code is available at <a href="https://github.com/GabeBecker2048/n-measures">github.com/GabeBecker2048/n-measures</a>.</p>
+
+  <h2>Limitations and extensions</h2>
+  <p><b>Polyphony.</b> We count melodies, one note at a time. If any set of keys may sound together, each slot has \(2^{88}\) choices (the empty set being the rest), and the 4/4 count rises to roughly \(10^{424}\). Theorem 3 applies unchanged with \(p=2^{88}\).</p>
+
+  <p><b>Triplets and other tuplets.</b> Tuplets are excluded from the counts above. The <a href="addendum.html">addendum</a> adds eighth-, quarter- and half-note triplets by treating each complete triplet group as a single block in the recurrence. This raises the headline counts to about \(2.21\times10^{35}\) written and \(4.51\times10^{31}\) sounding measures. Counting sounds with triplets needs a new method, since rests inside a triplet group merge with rests outside it. The addendum does this exactly with a finite automaton.</p>
+
+  <p><b>Ties.</b> Ties are excluded from the counts above, but they fit the same framework with small changes.</p>
+  <p><i>Ties, written.</i> A tie joins a pitched note to the next note, which must then have the same pitch. When writing a measure, each note after a pitched note therefore has one extra option, "tied to the previous note", besides the \(p\) ordinary symbols. Keeping track of whether the measure so far ends on a pitched note (\(P\)) or on a rest or nothing (\(R\)), with \(k = p-1\) pitches,
+  \[ P(t) = \sum_{\substack{d\in D\\ d\le t}} \Big( k\,\big(P(t-d)+R(t-d)\big) + P(t-d) \Big), \qquad R(t) = \sum_{\substack{d\in D\\ d\le t}} \big(P(t-d)+R(t-d)\big), \]
+  with \(P(0)=0\), \(R(0)=1\), and answer \(P(L)+R(L)\). The extra term \(P(t-d)\) is the tie. For 4/4 with sharp and flat spellings this raises the written count from about \(2.075\times10^{35}\) to about \(2.276\times10^{35}\), roughly 10% more.</p>
+  <p><i>Ties, sounding.</i> A tied note sounds like one note whose length is the sum of the tied values. Ties therefore change only which note lengths are possible: in Theorem 6, notes may now last any length in \(G\), exactly like silences, so \(D\) is replaced by \(G\) in the equation for \(A(t)\). For 4/4 on 88 keys the sounding count rises by about 1%, to about \(4.140\times10^{31}\). It changes so little because most new sounds are long held notes, while most measures are dominated by busy rhythms.</p>
+
+  <p><b>Notation conventions.</b> We do not impose engraving rules (beaming, how syncopations are conventionally written, clef or key signature), nor do we model dynamics, articulation or tempo. Each of these would multiply the counts further or restrict them in convention-dependent ways.</p>
+
+  <footer class="page">
+    <a href="addendum.html">Addendum: triplets</a> · <a href="calculator.html">Calculator</a> · <a href="story.html">How this problem came about</a> · <a href="https://github.com/GabeBecker2048/n-measures">Source</a>
+  </footer>
+</main>
+
+<script src="counter.js"></script>
+<script src="paper.js"></script>
+</body>
+</html>

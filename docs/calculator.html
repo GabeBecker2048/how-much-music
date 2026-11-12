@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Measure Calculator</title>
+<meta name="description" content="Count the possible measures of music for any pitch range, time signature and set of note values.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="site">
+  <a href="index.html">Paper</a><span class="sep">·</span><a href="addendum.html">Addendum</a><span class="sep">·</span><span aria-current="page">Calculator</span><span class="sep">·</span><a href="story.html">Story</a>
+  <a href="#" class="print-link" onclick="window.print();return false">Print / save as PDF</a>
+</nav>
+
+<main>
+  <header class="title">
+    <h1>Measure Calculator</h1>
+    <p class="date">Count every possible measure for a pitch range, time signature, set of note values and triplets.</p>
+  </header>
+
+  <form class="calc" id="f" onsubmit="return false" autocomplete="off">
+    <div class="field">
+      <span class="label">Pitch range</span>
+      <span><input type="text" id="lo" value="A0" aria-label="Lowest pitch"> to <input type="text" id="hi" value="C8" aria-label="Highest pitch">
+        <p class="hint">Scientific pitch names, e.g. A0, C4 (middle C), F#5, Bb2.</p></span>
+    </div>
+    <div class="field">
+      <span class="label">Time signature</span>
+      <span><input type="number" id="beats" value="4" min="1" max="64" aria-label="Beats per measure" style="width:3.5rem"> /
+        <select id="beatValue" aria-label="Beat value"><option>1</option><option>2</option><option selected>4</option><option>8</option><option>16</option></select></span>
+    </div>
+    <div class="field">
+      <span class="label">Count</span>
+      <span class="opts">
+        <label><input type="radio" name="mode" value="written" checked> ways it can be written</label>
+        <label><input type="radio" name="mode" value="sounding"> ways it can sound</label>
+        <p class="hint" id="modeHint"></p>
+      </span>
+    </div>
+    <div class="field" id="symBox">
+      <span class="label">Symbols</span>
+      <span class="opts">
+        <label><input type="radio" name="sym" value="keys"> one per key</label>
+        <label><input type="radio" name="sym" value="0"> naturals only</label>
+        <label><input type="radio" name="sym" value="1" checked> ♯ and ♭ spellings</label>
+        <label><input type="radio" name="sym" value="2"> also 𝄪 and 𝄫</label>
+      </span>
+    </div>
+    <div class="field">
+      <span class="label">Note values</span>
+      <span class="opts" id="values"></span>
+    </div>
+    <div class="field">
+      <span class="label">Triplets</span>
+      <span class="opts"><span id="triplets"></span>
+        <p class="hint">Off by default, as in the main paper; see the <a href="addendum.html">addendum</a>.</p></span>
+    </div>
+    <div class="field">
+      <span></span>
+      <span><a href="#" id="reset">Reset to 4/4, full piano</a></span>
+    </div>
+  </form>
+
+  <section class="result" id="result" aria-live="polite"></section>
+
+  <p class="meta" style="margin-top:2rem;font-size:.9rem">All counts are exact (arbitrary-precision integers); scientific values are rounded to four significant digits. One note at a time, with no ties. Triplet groups, when enabled, are counted as whole groups. See the <a href="index.html">paper</a> and <a href="addendum.html">addendum</a> for the method.</p>
+
+  <footer class="page">
+    <p class="disclosure">The solution is Gabriel Becker's, worked out by hand as a math proof and a CS proof with pseudocode. Claude Opus 5.5 translated it into the formal paper and built the calculator.</p>
+    <a href="index.html">Paper</a> · <a href="addendum.html">Addendum</a> · <a href="story.html">Story</a> · <a href="https://github.com/GabeBecker2048/n-measures">Source</a>
+  </footer>
+</main>
+
+<script src="counter.js"></script>
+<script>
+(function () {
+  "use strict";
+  const N = window.NMeasures;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  $("values").innerHTML = N.NOTE_VALUES.map((v) =>
+    `<label><input type="checkbox" value="${v.units}" checked> ${v.name}</label>`).join("");
+  $("triplets").innerHTML = N.TRIPLETS.map((t) =>
+    `<label><input type="checkbox" value="${t.value}"> ${t.name}</label>`).join("");
+
+  function checked(name) { return document.querySelector(`input[name=${name}]:checked`).value; }
+
+  function render() {
+    const out = $("result");
+    const mode = checked("mode");
+    $("symBox").style.display = mode === "written" ? "" : "none";
+    $("modeHint").textContent = mode === "written"
+      ? "Each slot holds one symbol or a rest; a half rest and two quarter rests count as different."
+      : "One symbol per key; back-to-back rests merge into a single silence.";
+
+    try {
+      const lo = N.parsePitch($("lo").value), hi = N.parsePitch($("hi").value);
+      if (hi < lo) throw new Error("The highest pitch is below the lowest pitch.");
+      const beats = parseInt($("beats").value, 10);
+      if (!(beats >= 1 && beats <= 64)) throw new Error("Beats per measure must be between 1 and 64.");
+      const length = N.measureUnits(beats, parseInt($("beatValue").value, 10));
+      if (length > 8 * N.GRID) throw new Error("Measures longer than 8 whole notes are not supported here.");
+      const units = [...document.querySelectorAll("#values input:checked")].map((i) => +i.value);
+      const trips = [...document.querySelectorAll("#triplets input:checked")].map((i) => +i.value);
+      if (!units.length && !trips.length) throw new Error("Choose at least one note value or triplet.");
+      const blocks = N.makeBlocks(units, trips);
+
+      const keys = N.keysInRange(lo, hi);
+      let total, p, desc;
+      if (mode === "written") {
+        const sym = checked("sym");
+        const symbols = sym === "keys" ? keys : N.spellingsInRange(lo, hi, +sym);
+        p = symbols + 1;
+        total = N.countWritten(length, p, blocks);
+        desc = `${symbols} ${sym === "keys" ? "keys" : "spellings"} + 1 rest, so <i>p</i> = ${p}`;
+      } else {
+        p = keys;
+        total = N.countSounding(length, keys, blocks);
+        desc = `<i>k</i> = ${keys} keys, rests merged`;
+      }
+
+      const rhythms = N.rhythmsByNoteCount(length, blocks);
+      const nRhythms = rhythms.reduce((a, b) => a + b, 0n);
+      const digits = total.toString().length;
+
+      let table = "";
+      if (mode === "written" && total > 0n) {
+        const P = BigInt(p);
+        const body = rhythms
+          .map((r, n) => ({ n, r, ways: r * P ** BigInt(n) }))
+          .filter((x) => x.r > 0n)
+          .map((x) => `<tr><td>${x.n}</td><td>${N.withCommas(x.r)}</td><td>${N.scientificHTML(x.ways)}</td><td>${N.share(x.ways, total)}</td></tr>`)
+          .join("");
+        table = `<div class="table-wrap"><table>
+          <caption><b>Breakdown.</b> Measures by number of notes <i>n</i>.</caption>
+          <thead><tr><th><i>n</i></th><th>Rhythms</th><th>Measures</th><th>Share</th></tr></thead>
+          <tbody>${body}</tbody></table></div>`;
+      }
+
+      out.innerHTML = `
+        <h2 style="margin-top:0">Result</h2>
+        <p class="value">${N.scientificHTML(total)}</p>
+        <p class="exact">${N.withCommas(total)}</p>
+        <p class="meta">${digits} digit${digits === 1 ? "" : "s"} · ${desc} · ${N.withCommas(nRhythms)} rhythms · measure length ${length} units of 1/96 whole note</p>
+        ${table}`;
+    } catch (e) {
+      out.innerHTML = `<h2 style="margin-top:0">Result</h2><p class="error">${esc(e.message)}</p>`;
+    }
+  }
+
+  $("reset").addEventListener("click", (e) => {
+    e.preventDefault();
+    $("lo").value = "A0"; $("hi").value = "C8"; $("beats").value = "4"; $("beatValue").value = "4";
+    document.querySelector("input[name=mode][value=written]").checked = true;
+    document.querySelector("input[name=sym][value=\"1\"]").checked = true;
+    document.querySelectorAll("#values input").forEach((i) => (i.checked = true));
+    document.querySelectorAll("#triplets input").forEach((i) => (i.checked = false));
+    render();
+  });
+  $("f").addEventListener("input", render);
+  $("f").addEventListener("change", render);
+  render();
+})();
+</script>
+</body>
+</html>
